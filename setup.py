@@ -58,7 +58,6 @@ setup(
             'pytest-cov',
             'coverage',
             'pytest-timeout',
-            'pytest-tornado',
             'pytest-benchmark[histogram]',
             'pytest-localserver',
             'flake8',

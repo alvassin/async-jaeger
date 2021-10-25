@@ -9,8 +9,6 @@ sources := $(shell find $(projects) tests -name '*.py' | grep -v version.py | gr
 test_args := --cov-report term-missing --cov-report xml --junitxml junit.xml
 cover_args := --cov-report html
 
-include crossdock/rules.mk
-
 PY_PATH = $(PYTHONPATH):$(PWD)
 
 .DEFAULT_GOAL := test
