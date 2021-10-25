@@ -1,4 +1,4 @@
-recursive-include jaeger_client *.thrift
+recursive-include async_jaeger *.thrift
 include *.md
 include *.rst
 include *.txt
@@ -8,4 +8,4 @@ recursive-include config *.json
 recursive-include config *.yaml
 recursive-include docs *.rst
 recursive-include tests *.py
-recursive-include jaeger_client *.typed
+recursive-include async_jaeger *.typed
