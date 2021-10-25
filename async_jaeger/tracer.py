@@ -28,15 +28,13 @@ from opentracing.ext import tags as ext_tags
 from opentracing.scope_managers import ThreadLocalScopeManager, ScopeManager
 from opentracing.tracer import Reference
 
-from tornado.concurrent import Future
-
 from . import constants
-from .codecs import TextCodec, ZipkinCodec, ZipkinSpanFormat, BinaryCodec, Codec
+from .codecs import TextCodec, BinaryCodec, BaseCodec
 from .span import Span, SAMPLED_FLAG, DEBUG_FLAG
 from .span_context import SpanContext
 from .metrics import Metrics, LegacyMetricsFactory, MetricsFactory
 from .utils import local_ip
-from .sampler import Sampler
+from .sampler import BaseSampler, ConstSampler
 from .reporter import BaseReporter
 from .throttler import Throttler
 
@@ -51,7 +49,7 @@ class Tracer(opentracing.Tracer):
         self,
         service_name: str,
         reporter: BaseReporter,
-        sampler: Sampler,
+        sampler: BaseSampler = None,
         metrics: Optional[Metrics] = None,
         metrics_factory: Optional[MetricsFactory] = None,
         trace_id_header: str = constants.TRACE_ID_HEADER,
@@ -59,7 +57,7 @@ class Tracer(opentracing.Tracer):
         baggage_header_prefix: str = constants.BAGGAGE_HEADER_PREFIX,
         debug_id_header: str = constants.DEBUG_ID_HEADER_KEY,
         one_span_per_rpc: bool = False,
-        extra_codecs: Optional[Dict[str, Codec]] = None,
+        extra_codecs: Optional[Dict[str, BaseCodec]] = None,
         tags: Optional[Dict[str, Any]] = None,
         max_tag_value_length: int = constants.MAX_TAG_VALUE_LENGTH,
         max_traceback_length: int = constants.MAX_TRACEBACK_LENGTH,
@@ -68,7 +66,7 @@ class Tracer(opentracing.Tracer):
     ) -> None:
         self.service_name = service_name
         self.reporter = reporter
-        self.sampler = sampler
+        self.sampler = sampler or ConstSampler(True)
         self.metrics_factory = metrics_factory or LegacyMetricsFactory(metrics or Metrics())
         self.metrics = TracerMetrics(self.metrics_factory)
         self.random = random.Random(time.time() * (os.getpid() or 1))
@@ -92,7 +90,6 @@ class Tracer(opentracing.Tracer):
                 debug_id_header=debug_id_header,
             ),
             Format.BINARY: BinaryCodec(),
-            ZipkinSpanFormat: ZipkinCodec(),
         }
         if extra_codecs:
             self.codecs.update(extra_codecs)
@@ -282,7 +279,7 @@ class Tracer(opentracing.Tracer):
             raise UnsupportedFormatException(format)
         return codec.extract(carrier)
 
-    def close(self) -> Future:
+    async def close(self):
         """
         Perform a clean shutdown of the tracer, flushing any traces that
         may be buffered in memory.
@@ -290,8 +287,8 @@ class Tracer(opentracing.Tracer):
         :return: Returns a tornado.concurrent.Future that indicates if the
             flush has been completed.
         """
-        self.sampler.close()
-        return self.reporter.close()
+        await self.sampler.close()
+        return await self.reporter.close()
 
     def _emit_span_metrics(self, span: Span, join: Optional[bool] = False) -> Span:
         if span.is_sampled():
@@ -311,15 +308,9 @@ class Tracer(opentracing.Tracer):
                     self.metrics.traces_started_not_sampled(1)
         return span
 
-    def report_span(self, span: Span) -> None:
-        self.reporter.report_span(span)
+    async def report_span(self, span: Span) -> None:
+        await self.reporter.report_span(span)
         self.metrics.spans_finished(1)
-
-    def random_id(self) -> int:
-        """
-        DEPRECATED: use _random_id() instead
-        """
-        return self.random.getrandbits(constants.MAX_ID_BITS)
 
     def _random_id(self, bitsize: int) -> int:
         return self.random.getrandbits(bitsize)

@@ -14,9 +14,9 @@
 
 import time
 from opentracing import Tracer as NoopTracer
-from jaeger_client.tracer import Tracer
-from jaeger_client.reporter import NullReporter
-from jaeger_client.sampler import ConstSampler
+from async_jaeger.tracer import Tracer
+from async_jaeger.reporter import NullReporter
+from async_jaeger.sampler import ConstSampler
 
 
 def _generate_spans(tracer, iterations=1000, sleep=None):

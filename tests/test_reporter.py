@@ -20,27 +20,26 @@ import collections
 import mock
 import pytest
 import tornado.gen
-import jaeger_client.reporter
+import async_jaeger.reporter
 
 from tornado.concurrent import Future
-from jaeger_client import Span, SpanContext
-from jaeger_client.metrics import LegacyMetricsFactory, Metrics
-from jaeger_client.utils import ErrorReporter
+from async_jaeger import Span, SpanContext
+from async_jaeger.metrics import LegacyMetricsFactory, Metrics
+from async_jaeger.utils import ErrorReporter
 from tornado.ioloop import IOLoop
 from tornado.testing import AsyncTestCase, gen_test
-from jaeger_client.reporter import Reporter
-from jaeger_client.ioloop_util import future_result
+from async_jaeger.reporter import HttpReporter
 
 
 def test_null_reporter():
-    reporter = jaeger_client.reporter.NullReporter()
+    reporter = async_jaeger.reporter.NullReporter()
     reporter.report_span({})
     f = reporter.close()
     f.result()
 
 
 def test_in_memory_reporter():
-    reporter = jaeger_client.reporter.InMemoryReporter()
+    reporter = async_jaeger.reporter.InMemoryReporter()
     reporter.report_span({})
     f = reporter.close()
     f.result()
@@ -50,7 +49,7 @@ def test_in_memory_reporter():
 
 def test_logging_reporter():
     log_mock = mock.MagicMock()
-    reporter = jaeger_client.reporter.LoggingReporter(logger=log_mock)
+    reporter = async_jaeger.reporter.LoggingReporter(logger=log_mock)
     reporter.report_span({})
     log_mock.info.assert_called_with('Reporting span %s', {})
     reporter.close().result()
@@ -116,7 +115,7 @@ class ReporterTest(AsyncTestCase):
 
     @staticmethod
     def _new_reporter(batch_size, flush=None, queue_cap=100):
-        reporter = Reporter(channel=mock.MagicMock(),
+        reporter = HttpReporter(channel=mock.MagicMock(),
                             io_loop=IOLoop.current(),
                             batch_size=batch_size,
                             flush_interval=flush,
@@ -227,8 +226,7 @@ class ReporterTest(AsyncTestCase):
 
         yield reporter.close()
 
-    @gen_test
-    def test_close_drains_queue(self):
+    async def test_close_drains_queue(self):
         reporter, sender = self._new_reporter(batch_size=1, flush=0.050)
         reporter.report_span(self._new_span('0'))
 
@@ -264,26 +262,26 @@ class ReporterTest(AsyncTestCase):
 
     @gen_test
     def test_composite_reporter(self):
-        reporter = jaeger_client.reporter.CompositeReporter(
-            jaeger_client.reporter.NullReporter(),
-            jaeger_client.reporter.LoggingReporter())
-        with mock.patch('jaeger_client.reporter.NullReporter.set_process') \
+        reporter = async_jaeger.reporter.CompositeReporter(
+            async_jaeger.reporter.NullReporter(),
+            async_jaeger.reporter.LoggingReporter())
+        with mock.patch('async_jaeger.reporter.NullReporter.set_process') \
                 as null_mock:
-            with mock.patch('jaeger_client.reporter.LoggingReporter.set_process') \
+            with mock.patch('async_jaeger.reporter.LoggingReporter.set_process') \
                     as log_mock:
                 reporter.set_process('x', {}, 123)
                 null_mock.assert_called_with('x', {}, 123)
                 log_mock.assert_called_with('x', {}, 123)
-        with mock.patch('jaeger_client.reporter.NullReporter.report_span') \
+        with mock.patch('async_jaeger.reporter.NullReporter.report_span') \
                 as null_mock:
-            with mock.patch('jaeger_client.reporter.LoggingReporter.report_span') \
+            with mock.patch('async_jaeger.reporter.LoggingReporter.report_span') \
                     as log_mock:
                 reporter.report_span({})
                 null_mock.assert_called_with({})
                 log_mock.assert_called_with({})
-        with mock.patch('jaeger_client.reporter.NullReporter.close') \
+        with mock.patch('async_jaeger.reporter.NullReporter.close') \
                 as null_mock:
-            with mock.patch('jaeger_client.reporter.LoggingReporter.close') \
+            with mock.patch('async_jaeger.reporter.LoggingReporter.close') \
                     as log_mock:
 
                 f1 = Future()

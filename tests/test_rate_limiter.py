@@ -15,7 +15,7 @@
 import time
 import mock
 
-from jaeger_client.rate_limiter import RateLimiter
+from async_jaeger.rate_limiter import RateLimiter
 
 
 def test_rate_limiting_sampler():
@@ -26,7 +26,7 @@ def test_rate_limiting_sampler():
     # the same time
     ts = time.time()
     rate_limiter.last_tick = ts
-    with mock.patch('jaeger_client.rate_limiter.RateLimiter.timestamp') \
+    with mock.patch('async_jaeger.rate_limiter.RateLimiter.timestamp') \
             as mock_time:
         mock_time.side_effect = lambda: ts  # always return same time
         assert rate_limiter.timestamp() == ts
@@ -58,7 +58,7 @@ def test_rate_limiting_sampler():
     rate_limiter.balance = 1.0
     ts = time.time()
     rate_limiter.last_tick = ts
-    with mock.patch('jaeger_client.rate_limiter.RateLimiter.timestamp') \
+    with mock.patch('async_jaeger.rate_limiter.RateLimiter.timestamp') \
             as mock_time:
         mock_time.side_effect = lambda: ts  # always return same time
         assert rate_limiter.timestamp() == ts
@@ -75,7 +75,7 @@ def test_rate_limiting_sampler():
     rate_limiter.balance = 3.0
     ts = time.time()
     rate_limiter.last_tick = ts
-    with mock.patch('jaeger_client.rate_limiter.RateLimiter.timestamp') \
+    with mock.patch('async_jaeger.rate_limiter.RateLimiter.timestamp') \
             as mock_time:
         mock_time.side_effect = lambda: ts  # always return same time
         assert rate_limiter.timestamp() == ts

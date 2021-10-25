@@ -21,8 +21,8 @@ import tornado.httputil
 
 from opentracing import Format, child_of, follows_from
 from opentracing.ext import tags as ext_tags
-from jaeger_client import ConstSampler, SpanContext, Tracer
-from jaeger_client import constants as c
+from async_jaeger import ConstSampler, SpanContext, Tracer
+from async_jaeger import constants as c
 
 
 def find_tag(span, key, tag_type='str'):
@@ -237,7 +237,7 @@ def test_tracer_tags_no_hostname():
     reporter = mock.MagicMock()
     sampler = ConstSampler(True)
 
-    from jaeger_client.tracer import logger
+    from async_jaeger.tracer import logger
     with mock.patch.object(logger, 'exception') as mock_log:
         with mock.patch('socket.gethostname',
                         side_effect=['host', socket.timeout()]):

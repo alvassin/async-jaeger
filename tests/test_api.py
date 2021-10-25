@@ -15,8 +15,8 @@
 
 import unittest
 
-from jaeger_client import ConstSampler, Tracer
-from jaeger_client.reporter import NullReporter
+from async_jaeger import ConstSampler, Tracer
+from async_jaeger.reporter import NullReporter
 from opentracing.harness.api_check import APICompatibilityCheckMixin
 
 

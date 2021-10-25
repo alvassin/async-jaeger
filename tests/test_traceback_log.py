@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import mock
-from jaeger_client import Span, SpanContext
+from async_jaeger import Span, SpanContext
 
 
 def test_traceback():

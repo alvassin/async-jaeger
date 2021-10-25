@@ -1,5 +1,5 @@
-project := jaeger_client
-projects := jaeger_client crossdock
+project := async_jaeger
+projects := async_jaeger crossdock
 flake8 := flake8
 COV_DIRS := $(projects:%=--cov %)
 pytest_args := -s --tb short --cov-config .coveragerc $(COV_DIRS) tests
@@ -40,7 +40,7 @@ test-import:
 	virtualenv import-test
 	import-test/bin/pip install -e .
 	pip install "tornado$(TORNADO)"  # Reinstall Tornado version for testing.
-	import-test/bin/python -c "import jaeger_client"
+	import-test/bin/python -c "import async_jaeger"
 	rm -rf import-test
 
 .PHONY: test-perf
@@ -63,7 +63,7 @@ clean:
 	@find $(project) "(" -name "*.pyc" -o -name "coverage.xml" -o -name "junit.xml" ")" -delete
 	@find tests "(" -name "*.pyc" -o -name "coverage.xml" -o -name "junit.xml" -o -name __pycache__ ")" -delete
 	@find . "(" -name "*.pyc" -o -name "coverage.xml" -o -name "junit.xml" -o -name __pycache__ ")" -delete
-	@rm -rf jaeger_client.egg-info
+	@rm -rf async_jaeger.egg-info
 	@rm -rf .mypy_cache
 
 .PHONY: lint
@@ -77,8 +77,8 @@ shell:
 	ipython
 
 # Generate jaeger thrifts
-THRIFT_GEN_DIR=jaeger_client/thrift_gen
-THRIFT_PACKAGE_PREFIX=jaeger_client.thrift_gen
+THRIFT_GEN_DIR=async_jaeger/thrift_gen
+THRIFT_PACKAGE_PREFIX=async_jaeger.thrift_gen
 THRIFT_VER=0.9.3
 THRIFT_IMG=thrift:$(THRIFT_VER)
 THRIFT_PY_ARGS=new_style,tornado

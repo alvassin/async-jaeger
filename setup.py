@@ -5,7 +5,7 @@ import re
 from setuptools import setup, find_packages
 
 version = None
-with open('jaeger_client/__init__.py', 'r') as f:
+with open('async_jaeger/__init__.py', 'r') as f:
     for line in f:
         m = re.match(r'^__version__\s*=\s*(["\'])([^"\']+)\1', line)
         if m:
@@ -13,7 +13,7 @@ with open('jaeger_client/__init__.py', 'r') as f:
             break
 
 assert version is not None, \
-    'Could not determine version number from jaeger_client/__init__.py'
+    'Could not determine version number from async_jaeger/__init__.py'
 
 setup(
     name='jaeger-client',
@@ -38,9 +38,8 @@ setup(
     ],
     python_requires='>=3.7',
     install_requires=[
-        'threadloop>=1,<2',
-        'thrift',
-        'tornado>=4.3',
+        'aiohttp',
+        'thriftpy2',
         'opentracing>=2.1,<3.0',
     ],
     # Uncomment below if need to test with unreleased version of opentracing
@@ -49,6 +48,9 @@ setup(
     # ],
     test_suite='tests',
     extras_require={
+        "dev": [
+            "aiomisc",
+        ],
         'tests': [
             'mock',
             'pycurl',

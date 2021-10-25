@@ -19,15 +19,14 @@ from itertools import product
 
 import mock
 import pytest
-from jaeger_client import Span, SpanContext, Tracer, ConstSampler
-from jaeger_client.codecs import (
-    Codec, TextCodec, BinaryCodec, ZipkinCodec, ZipkinSpanFormat, B3Codec,
+from async_jaeger import Span, SpanContext, Tracer, ConstSampler
+from async_jaeger.codecs import (
+    BaseCodec, TextCodec, BinaryCodec,
     span_context_from_string,
     span_context_to_string,
 )
-from jaeger_client.config import Config
-from jaeger_client.reporter import InMemoryReporter
-from jaeger_client import constants
+from async_jaeger.reporter import InMemoryReporter
+from async_jaeger import constants
 from opentracing import Format
 from opentracing.propagation import (
     InvalidCarrierException,
@@ -38,7 +37,7 @@ from opentracing.propagation import (
 class TestCodecs(unittest.TestCase):
 
     def test_abstract_codec(self):
-        codec = Codec()
+        codec = BaseCodec()
         with self.assertRaises(NotImplementedError):
             codec.inject({}, {})
         with self.assertRaises(NotImplementedError):
@@ -172,42 +171,42 @@ class TestCodecs(unittest.TestCase):
         with self.assertRaises(SpanContextCorruptedException):
             codec.extract(good_headers_bad_values)
 
-    def test_context_from_readable_headers(self):
-        # provide headers all the way through Config object
-        config = Config(
-            service_name='test',
-            config={
-                'trace_id_header': 'Trace_ID',
-                'baggage_header_prefix': 'Trace-Attr-',
-            })
-        tracer = config.create_tracer(
-            reporter=InMemoryReporter(),
-            sampler=ConstSampler(True),
-        )
-        for url_encoding in [False, True]:
-            if url_encoding:
-                codec = tracer.codecs[Format.HTTP_HEADERS]
-                headers = {
-                    'Trace-ID': '100%3A7f:0:1',
-                    'trace-attr-Kiff': 'Amy%20Wang',
-                    'trace-atTR-HERMES': 'LaBarbara%20Hermes'
-                }
-            else:
-                codec = tracer.codecs[Format.HTTP_HEADERS]
-                headers = {
-                    'Trace-ID': '100:7f:0:1',
-                    'trace-attr-Kiff': 'Amy Wang',
-                    'trace-atTR-HERMES': 'LaBarbara Hermes'
-                }
-            ctx = codec.extract(headers)
-            assert ctx.trace_id == 256
-            assert ctx.span_id == 127
-            assert ctx.parent_id is None
-            assert ctx.flags == 1
-            assert ctx.baggage == {
-                'kiff': 'Amy Wang',
-                'hermes': 'LaBarbara Hermes',
-            }
+    # def test_context_from_readable_headers(self):
+    #     # provide headers all the way through Config object
+    #     config = Config(
+    #         service_name='test',
+    #         config={
+    #             'trace_id_header': 'Trace_ID',
+    #             'baggage_header_prefix': 'Trace-Attr-',
+    #         })
+    #     tracer = config.create_tracer(
+    #         reporter=InMemoryReporter(),
+    #         sampler=ConstSampler(True),
+    #     )
+    #     for url_encoding in [False, True]:
+    #         if url_encoding:
+    #             codec = tracer.codecs[Format.HTTP_HEADERS]
+    #             headers = {
+    #                 'Trace-ID': '100%3A7f:0:1',
+    #                 'trace-attr-Kiff': 'Amy%20Wang',
+    #                 'trace-atTR-HERMES': 'LaBarbara%20Hermes'
+    #             }
+    #         else:
+    #             codec = tracer.codecs[Format.HTTP_HEADERS]
+    #             headers = {
+    #                 'Trace-ID': '100:7f:0:1',
+    #                 'trace-attr-Kiff': 'Amy Wang',
+    #                 'trace-atTR-HERMES': 'LaBarbara Hermes'
+    #             }
+    #         ctx = codec.extract(headers)
+    #         assert ctx.trace_id == 256
+    #         assert ctx.span_id == 127
+    #         assert ctx.parent_id is None
+    #         assert ctx.flags == 1
+    #         assert ctx.baggage == {
+    #             'kiff': 'Amy Wang',
+    #             'hermes': 'LaBarbara Hermes',
+    #         }
 
     def test_context_from_large_ids(self):
         codec = TextCodec(trace_id_header='Trace_ID',
@@ -226,165 +225,6 @@ class TestCodecs(unittest.TestCase):
         assert context.parent_id == (1 << 64) - 1
         assert context.parent_id > 0
 
-    def test_zipkin_codec_extract(self):
-        codec = ZipkinCodec()
-
-        t = namedtuple('Tracing', 'span_id parent_id trace_id traceflags')
-        carrier = t(span_id=1, parent_id=2, trace_id=3, traceflags=1)
-        context = codec.extract(carrier)
-        assert 3 == context.trace_id
-        assert 2 == context.parent_id
-        assert 1 == context.span_id
-        assert 1 == context.flags
-        assert context.baggage == {}
-
-        t = namedtuple('Tracing', 'something')
-        carrier = t(something=1)
-        with self.assertRaises(InvalidCarrierException):
-            codec.extract(carrier)
-
-        t = namedtuple('Tracing', 'trace_id')
-        carrier = t(trace_id=1)
-        with self.assertRaises(InvalidCarrierException):
-            codec.extract(carrier)
-
-        t = namedtuple('Tracing', 'trace_id span_id')
-        carrier = t(trace_id=1, span_id=1)
-        with self.assertRaises(InvalidCarrierException):
-            codec.extract(carrier)
-
-        t = namedtuple('Tracing', 'trace_id span_id parent_id')
-        carrier = t(trace_id=1, span_id=1, parent_id=1)
-        with self.assertRaises(InvalidCarrierException):
-            codec.extract(carrier)
-
-        carrier = {'span_id': 1, 'parent_id': 2, 'trace_id': 3,
-                   'traceflags': 1}
-        context = codec.extract(carrier)
-        assert 3 == context.trace_id
-        assert 2 == context.parent_id
-        assert 1 == context.span_id
-        assert 1 == context.flags
-        assert context.baggage == {}
-
-        carrier['trace_id'] = 0
-        assert codec.extract(carrier) is None
-
-    def test_zipkin_codec_inject(self):
-        codec = ZipkinCodec()
-
-        with self.assertRaises(InvalidCarrierException):
-            codec.inject(span_context=None, carrier=[])
-
-        ctx = SpanContext(trace_id=256, span_id=127, parent_id=None, flags=1)
-        span = Span(context=ctx, operation_name='x', tracer=None, start_time=1)
-        carrier = {}
-        codec.inject(span_context=span, carrier=carrier)
-        assert carrier == {'span_id': 127, 'parent_id': None,
-                           'trace_id': 256, 'traceflags': 1}
-
-    def test_zipkin_b3_codec_inject(self):
-        codec = B3Codec()
-
-        with self.assertRaises(InvalidCarrierException):
-            codec.inject(span_context=None, carrier=[])
-
-        ctx = SpanContext(trace_id=256, span_id=127, parent_id=None, flags=2)
-        span = Span(context=ctx, operation_name='x', tracer=None, start_time=1)
-        carrier = {}
-        codec.inject(span_context=span, carrier=carrier)
-        assert carrier == {'X-B3-SpanId': format(127, 'x').zfill(16),
-                           'X-B3-TraceId': format(256, 'x').zfill(16), 'X-B3-Flags': '1'}
-
-    def test_b3_codec_inject_parent(self):
-        codec = B3Codec()
-
-        with self.assertRaises(InvalidCarrierException):
-            codec.inject(span_context=None, carrier=[])
-
-        ctx = SpanContext(trace_id=256, span_id=127, parent_id=32, flags=1)
-        span = Span(context=ctx, operation_name='x', tracer=None, start_time=1)
-        carrier = {}
-        codec.inject(span_context=span, carrier=carrier)
-        assert carrier == {'X-B3-SpanId': format(127, 'x').zfill(16),
-                           'X-B3-ParentSpanId': format(32, 'x').zfill(16),
-                           'X-B3-TraceId': format(256, 'x').zfill(16), 'X-B3-Sampled': '1'}
-
-    def test_b3_extract(self):
-        codec = B3Codec()
-
-        with self.assertRaises(InvalidCarrierException):
-            codec.extract([])
-
-        # Implicit case insensitivity testing
-        carrier = {'X-b3-SpanId': 'a2fb4a1d1a96d312', 'X-B3-ParentSpanId': '0020000000000001',
-                   'X-B3-traceId': '463ac35c9f6413ad48485a3953bb6124', 'X-B3-flags': '1'}
-
-        span_context = codec.extract(carrier)
-        assert span_context.span_id == int('a2fb4a1d1a96d312', 16)
-        assert span_context.trace_id == int('463ac35c9f6413ad48485a3953bb6124', 16)
-        assert span_context.parent_id == int('0020000000000001', 16)
-        assert span_context.flags == 0x02
-
-        # validate that missing parentspanid does not cause an error
-        carrier.pop('X-B3-ParentSpanId')
-        span_context = codec.extract(carrier)
-        assert span_context.parent_id is None
-
-        carrier.update({'X-b3-sampled': '1'})
-
-        span_context = codec.extract(carrier)
-        assert span_context.flags == 0x03
-
-        carrier.pop('X-B3-flags')
-        span_context = codec.extract(carrier)
-        assert span_context.flags == 0x01
-
-        # validate present debug header with falsy value
-        carrier = {'X-b3-SpanId': 'a2fb4a1d1a96d312', 'X-B3-flags': '0',
-                   'X-B3-traceId': '463ac35c9f6413ad48485a3953bb6124'}
-        span_context = codec.extract(carrier)
-        assert span_context.flags == 0x00
-
-        # validate missing context
-        assert codec.extract({}) is None
-
-        # validate explicit none in context
-        carrier = {'X-b3-SpanId': None,
-                   'X-B3-traceId': '463ac35c9f6413ad48485a3953bb6124'}
-        assert codec.extract(carrier) is None
-
-        # validate invalid hex string
-        with self.assertRaises(SpanContextCorruptedException):
-            codec.extract({'x-B3-TraceId': 'a2fb4a1d1a96d312z'})
-
-        # validate non-string header
-        with self.assertRaises(SpanContextCorruptedException):
-            codec.extract({'x-B3-traceId': 123})
-
-    def test_zipkin_b3_codec_extract_injected(self):
-        codec = B3Codec()
-        ctx = SpanContext(trace_id=256, span_id=127, parent_id=None, flags=0)
-        span = Span(context=ctx, operation_name='x', tracer=None, start_time=1)
-        carrier = {}
-        codec.inject(span_context=span, carrier=carrier)
-
-        extracted = codec.extract(carrier)
-        assert extracted.trace_id == ctx.trace_id
-        assert extracted.span_id == ctx.span_id
-        assert extracted.parent_id == ctx.parent_id
-        assert extracted.flags == ctx.flags
-
-    def test_128bit_trace_id_with_zero_padding(self):
-        codec = B3Codec(generate_128bit_trace_id=True)
-
-        carrier_1 = {'X-B3-SpanId': '39fe73de0012a0e5', 'X-B3-ParentSpanId': '3dbf8a511e159b05',
-                     'X-B3-TraceId': '023f352eaefd8b887a06732f5312e2de', 'X-B3-Flags': '0'}
-        span_context = codec.extract(carrier_1)
-
-        carrier_2 = {}
-        codec.inject(span_context=span_context, carrier=carrier_2)
-        assert carrier_1['X-B3-TraceId'] == carrier_2['X-B3-TraceId']
 
     def test_binary_codec(self):
         codec = BinaryCodec()
@@ -524,7 +364,7 @@ def _test_baggage_without_trace_id(tracer, trace_id_header, baggage_header_prefi
         trace_id_header=trace_id_header,
         baggage_header_prefix=baggage_header_prefix,
     )
-    with mock.patch('jaeger_client.codecs.span_context_from_string') as \
+    with mock.patch('async_jaeger.codecs.span_context_from_string') as \
             from_str:
         from_str.return_value = (0, 1, 1, 1)  # make trace ID == 0 (i.e. invalid)
         span_context = codec.extract(headers)
@@ -538,7 +378,6 @@ def _test_baggage_without_trace_id(tracer, trace_id_header, baggage_header_prefi
 @pytest.mark.parametrize('fmt,carrier', [
     (Format.TEXT_MAP, {}),
     (Format.HTTP_HEADERS, {}),
-    (ZipkinSpanFormat, {}),
 ])
 def test_round_trip(tracer, fmt, carrier):
     tracer_128bit = Tracer(
@@ -566,7 +405,6 @@ def _zipkin_codec_to_trace_id_string(carrier):
 @pytest.mark.parametrize('fmt,carrier,get_trace_id', [
     (Format.TEXT_MAP, {}, _text_codec_to_trace_id_string),
     (Format.HTTP_HEADERS, {}, _text_codec_to_trace_id_string),
-    (ZipkinSpanFormat, {}, _zipkin_codec_to_trace_id_string),
 ])
 def test_inject_with_128bit_trace_id(tracer, fmt, carrier, get_trace_id):
     tracer_128bit = Tracer(
@@ -580,7 +418,7 @@ def test_inject_with_128bit_trace_id(tracer, fmt, carrier, get_trace_id):
         trace_id = (1 << 64) - 1 if length == 16 else (1 << 128) - 1
         ctx = SpanContext(trace_id=trace_id, span_id=127, parent_id=None,
                           flags=1)
-        span = Span(ctx, operation_name='test-%s' % fmt, tracer=None, start_time=1)
+        span = Span(None, ctx, operation_name='test-%s' % fmt, start_time=1)
         tracer.inject(span, fmt, carrier)
         assert len(get_trace_id(carrier)) == length
 

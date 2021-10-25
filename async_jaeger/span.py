@@ -1,63 +1,55 @@
-# Copyright (c) 2016-2018 Uber Technologies, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
-import threading
-import time
+import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional, List
+import time
+from typing import Any, Dict, Optional, List, Mapping
+
+from opentracing import Tracer, SpanContext
 
 import opentracing
 from opentracing.ext import tags as ext_tags
-from .tracer import Reference
-from . import codecs, thrift
-from .constants import SAMPLED_FLAG, DEBUG_FLAG
-from .span_context import SpanContext
-import jaeger_client.thrift_gen.jaeger.ttypes as ttypes
 
-if TYPE_CHECKING:
-    from .tracer import Tracer
+from async_jaeger import codecs, thrift
+from async_jaeger.constants import SAMPLED_FLAG, DEBUG_FLAG
+from async_jaeger.thrift import TagType
 
-logger = logging.getLogger('jaeger_tracing')
+
+default_logger = logging.getLogger(__name__)
 
 
 class Span(opentracing.Span):
-    """Implements opentracing.Span."""
-
-    __slots__ = ['_tracer', '_context',
-                 'operation_name', 'start_time', 'end_time',
-                 'logs', 'tags', 'finished', 'update_lock']
+    __slots__ = (
+        '_tracer',
+        '_context',
+        'operation_name',
+        'start_time',
+        'end_time',
+        'logs',
+        'tags',
+        'finished',
+        'update_lock'
+    )
 
     def __init__(
         self,
+        tracer: Tracer,
         context: SpanContext,
-        tracer: 'Tracer',
         operation_name: str,
-        tags: Optional[Dict[str, Any]] = None,
+        tags: Optional[Mapping[str, TagType]] = None,
         start_time: Optional[float] = None,
-        references: Optional[List[Reference]] = None
+        references: Optional[List[opentracing.Reference]] = None
     ) -> None:
-        super(Span, self).__init__(context=context, tracer=tracer)
+        super().__init__(context=context, tracer=tracer)
         self.operation_name = operation_name
         self.start_time = start_time or time.time()
         self.end_time: Optional[float] = None
         self.finished = False
-        self.update_lock = threading.Lock()
+        self.update_lock = asyncio.Lock()
         self.references = references
-        # we store tags and logs as Thrift objects to avoid extra allocations
-        self.tags: List[ttypes.Tag] = []
-        self.logs: List[ttypes.Log] = []
+
+        # Store tags and logs as thrift objects to avoid extra allocations
+        self.tags: List[thrift.SPEC.Tag] = []
+        self.logs: List[thrift.SPEC.Log] = []
+
         if tags:
             for k, v in tags.items():
                 self.set_tag(k, v)
@@ -69,11 +61,13 @@ class Span(opentracing.Span):
         :param operation_name: the new operation name
         :return: Returns the Span itself, for call chaining.
         """
+
+        # TODO: нужен ли тут лок?
         with self.update_lock:
             self.operation_name = operation_name
         return self
 
-    def finish(self, finish_time: Optional[float] = None) -> None:
+    async def finish(self, finish_time: Optional[float] = None):
         """Indicate that the work represented by this span has been completed
         or terminated, and is ready to be sent to the Reporter.
 
@@ -86,31 +80,36 @@ class Span(opentracing.Span):
         if not self.is_sampled():
             return
 
-        with self.update_lock:
-            if self.finished:
-                logger.warning('Span has already been finished; will not be reported again.')
-                return
-            self.finished = True
-            self.end_time = finish_time or time.time()
+        if self.finished:
+            default_logger.warning(
+                'Span has already been finished; will not be reported again.'
+            )
+            return
+        self.finished = True
+        self.end_time = finish_time or time.time()
 
-        self.tracer.report_span(self)
+        await self.tracer.report_span(self)
 
     def set_tag(self, key: str, value: Any) -> 'Span':
         """
         :param key:
         :param value:
         """
-        with self.update_lock:
-            if key == ext_tags.SAMPLING_PRIORITY and not self._set_sampling_priority(value):
-                return self
-            if self.is_sampled():
-                tag = thrift.make_tag(
-                    key=key,
-                    value=value,
-                    max_length=self.tracer.max_tag_value_length,
-                    max_traceback_length=self._tracer.max_traceback_length,
-                )
-                self.tags.append(tag)
+        if (
+                key == ext_tags.SAMPLING_PRIORITY and
+                not self._set_sampling_priority(value)
+        ):
+            return self
+
+        if self.is_sampled():
+            tag = thrift.make_tag(
+                key=key,
+                value=value,
+                max_length=self.tracer.max_tag_value_length,
+                max_traceback_length=self._tracer.max_traceback_length,
+            )
+            self.tags.append(tag)
+
         return self
 
     def _set_sampling_priority(self, value):
@@ -134,7 +133,11 @@ class Span(opentracing.Span):
             return True
         return False
 
-    def log_kv(self, key_values: Dict[str, Any], timestamp: Optional[float] = None) -> 'Span':
+    def log_kv(
+            self,
+            key_values: Dict[str, Any],
+            timestamp: Optional[float] = None
+    ) -> 'Span':
         if self.is_sampled():
             timestamp = timestamp if timestamp else time.time()
             # TODO handle exception logging, 'python.exception.type' etc.
@@ -225,3 +228,27 @@ class Span(opentracing.Span):
         else:
             self.log(event=message)
         return self
+
+    async def __aenter__(self):
+        """Invoked when :class:`Span` is used as a context manager.
+
+        :rtype: Span
+        :return: the :class:`Span` itself
+        """
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Ends context manager and calls finish() on the :class:`Span`.
+
+        If exception has occurred during execution, it is automatically logged
+        and added as a tag. :attr:`~operation.ext.tags.ERROR` will also be set
+        to `True`.
+        """
+        Span._on_error(self, exc_type, exc_val, exc_tb)
+        await self.finish()
+
+    def __enter__(self):
+        raise NotImplementedError
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        raise NotImplementedError

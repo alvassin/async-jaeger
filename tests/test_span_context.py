@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from jaeger_client import SpanContext
+from async_jaeger import SpanContext
 
 
 def test_parent_id_to_none():

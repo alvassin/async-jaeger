@@ -15,7 +15,7 @@
 
 import mock
 
-from jaeger_client.metrics import MetricsFactory, Metrics,\
+from async_jaeger.metrics import MetricsFactory, Metrics,\
     LegacyMetricsFactory
 
 

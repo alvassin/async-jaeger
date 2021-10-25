@@ -19,7 +19,7 @@ import json
 import mock
 
 from opentracing.ext import tags as ext_tags
-from jaeger_client import Span, SpanContext, ConstSampler
+from async_jaeger import Span, SpanContext, ConstSampler
 
 
 def test_baggage():
