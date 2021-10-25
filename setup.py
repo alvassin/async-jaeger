@@ -16,12 +16,12 @@ assert version is not None, \
     'Could not determine version number from async_jaeger/__init__.py'
 
 setup(
-    name='jaeger-client',
+    name='async-jaeger',
     version=version,
-    url='https://github.com/jaegertracing/jaeger-client-python',
-    description='Jaeger Python OpenTracing Tracer implementation',
-    author='Yuri Shkuro',
-    author_email='ys@uber.com',
+    url='https://github.com/alvassin/async-jaeger',
+    description='Jaeger Python OpenTracing Tracer implementation for AsyncIO',
+    author='Alexander Vasin',
+    author_email='hi@alvass.in',
     packages=find_packages(exclude=['crossdock', 'tests', 'example', 'tests.*']),
     include_package_data=True,
     license='Apache License 2.0',
