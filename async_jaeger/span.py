@@ -88,7 +88,7 @@ class Span(opentracing.Span):
         self.finished = True
         self.end_time = finish_time or time.time()
 
-        await self.tracer.report_span(self)
+        self.tracer.report_span(self)
 
     def set_tag(self, key: str, value: Any) -> 'Span':
         """

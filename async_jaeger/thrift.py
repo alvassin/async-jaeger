@@ -3,7 +3,7 @@ import pkg_resources
 import time
 import traceback
 from types import TracebackType
-from typing import Union, Mapping, Any, Optional
+from typing import Union, Mapping, Any, Optional, Tuple
 
 import thriftpy2
 from opentracing import Reference, ReferenceType
@@ -31,6 +31,19 @@ def get_right_64_bits(value: int) -> int:
 
 def get_left_64_bits(value: int) -> int:
     return (value >> 64) & (MAX_UNSIGNED_ID - 1)
+
+
+def split_trace_id(value: int) -> Tuple[int, int]:
+    return (
+        (value >> 64) & (MAX_UNSIGNED_ID - 1),
+        value & (MAX_UNSIGNED_ID - 1)
+    )
+
+
+def union_trace_id(left, right) -> int:
+    return (
+        (left << 64) + right
+    )
 
 
 def convert_unsigned_int_to_signed(value: int) -> int:
@@ -146,3 +159,4 @@ def make_batch(spans, process):
         spans=[make_span(span) for span in spans],
         process=process,
     )
+

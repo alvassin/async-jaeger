@@ -30,7 +30,7 @@ class BaseReporter(ABC):
         pass
 
     @abstractmethod
-    async def report_span(self, span: Span):
+    def report_span(self, span: Span):
         pass
 
     async def close(self):
@@ -39,7 +39,7 @@ class BaseReporter(ABC):
 
 class NullReporter(BaseReporter):
     """Ignores all spans."""
-    async def report_span(self, span: Span):
+    def report_span(self, span: Span):
         pass
 
 
@@ -49,7 +49,7 @@ class InMemoryReporter(BaseReporter):
         super().__init__()
         self.spans: List[Span] = []
 
-    async def report_span(self, span: Span):
+    def report_span(self, span: Span):
         self.spans.append(span)
 
     def get_spans(self) -> List[Span]:
@@ -60,7 +60,7 @@ class LoggingReporter(NullReporter):
     def __init__(self, logger: Optional[logging.Logger] = None):
         self.logger = logger if logger else default_logger
 
-    async def report_span(self, span: Span):
+    def report_span(self, span: Span):
         self.logger.info('Reporting span %s', span)
 
 
@@ -85,7 +85,6 @@ class HttpReporter(NullReporter):
         self.flush_interval = flush_interval or None
         self.stop = object()
         self.stopped = False
-        self.stop_lock = asyncio.Lock()
         self._process = None
 
         if session:
@@ -112,11 +111,9 @@ class HttpReporter(NullReporter):
             service_name=service_name, tags=tags, max_length=max_length
         )
 
-    async def report_span(self, span: Span):
+    def report_span(self, span: Span):
         try:
-            async with self.stop_lock:
-                stopped = self.stopped
-            if stopped:
+            if self.stopped:
                 self.metrics.reporter_dropped(1)
             else:
                 self.queue.put_nowait(span)
@@ -169,7 +166,7 @@ class HttpReporter(NullReporter):
                     raise aiohttp.ClientResponseError(
                         resp.request_info, resp.history, code=resp.status
                     )
-            self.logger.info('sent %r spans', len(spans))
+            self.logger.debug('sent %r spans', len(spans))
             self.metrics.reporter_success(len(spans))
         except Exception as e:
             self.metrics.reporter_failure(len(spans))
@@ -178,9 +175,7 @@ class HttpReporter(NullReporter):
             )
 
     async def close(self):
-        async with self.stop_lock:
-            self.stopped = True
-
+        self.stopped = True
         await self.queue.put(self.stop)
         await self.queue.join()
         if self._close_session:
@@ -218,9 +213,9 @@ class CompositeReporter(BaseReporter):
         for reporter in self.reporters:
             reporter.set_process(service_name, tags)
 
-    async def report_span(self, span: Span):
+    def report_span(self, span: Span):
         for reporter in self.reporters:
-            await reporter.report_span(span)
+            reporter.report_span(span)
 
     async def close(self):
         await asyncio.gather(*(

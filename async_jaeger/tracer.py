@@ -308,8 +308,8 @@ class Tracer(opentracing.Tracer):
                     self.metrics.traces_started_not_sampled(1)
         return span
 
-    async def report_span(self, span: Span) -> None:
-        await self.reporter.report_span(span)
+    def report_span(self, span: Span) -> None:
+        self.reporter.report_span(span)
         self.metrics.spans_finished(1)
 
     def _random_id(self, bitsize: int) -> int:
