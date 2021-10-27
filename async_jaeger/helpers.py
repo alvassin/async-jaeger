@@ -6,7 +6,7 @@ from opentracing import Reference
 from async_jaeger import Span, SpanContext
 
 
-def encode_id(value: int, length: int, encoding = 'little') -> str:
+def encode_id(value: int, length: int, encoding = 'big') -> str:
     return value.to_bytes(length, encoding).hex()
 
 
