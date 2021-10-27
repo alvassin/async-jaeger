@@ -4,9 +4,7 @@ from .sampler import RateLimitingSampler
 from .span import Span
 from .span_context import SpanContext
 from .tracer import Tracer
-
-
-__version__ = '0.0.1'
+from .version import __version__
 
 __all__ = (
     "ConstSampler",

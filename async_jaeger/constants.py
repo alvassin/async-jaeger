@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from . import __version__
+from .version import __version__
 
 
 # DEPRECATED: max number of bits to use when generating random ID

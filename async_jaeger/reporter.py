@@ -169,6 +169,7 @@ class HttpReporter(NullReporter):
                     raise aiohttp.ClientResponseError(
                         resp.request_info, resp.history, code=resp.status
                     )
+            self.logger.info('sent %r spans', len(spans))
             self.metrics.reporter_success(len(spans))
         except Exception as e:
             self.metrics.reporter_failure(len(spans))
