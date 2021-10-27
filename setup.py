@@ -3,7 +3,7 @@ import re
 from setuptools import setup, find_packages
 
 version = None
-with open('async_jaeger/__init__.py', 'r') as f:
+with open('async_jaeger/version.py', 'r') as f:
     for line in f:
         m = re.match(r'^__version__\s*=\s*(["\'])([^"\']+)\1', line)
         if m:
