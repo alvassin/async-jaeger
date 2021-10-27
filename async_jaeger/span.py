@@ -3,7 +3,7 @@ import logging
 import time
 from typing import Any, Dict, Optional, List, Mapping
 
-from opentracing import Tracer, SpanContext
+from opentracing import Tracer
 
 import opentracing
 from opentracing.ext import tags as ext_tags
@@ -11,6 +11,7 @@ from opentracing.ext import tags as ext_tags
 from async_jaeger import codecs, thrift
 from async_jaeger.constants import SAMPLED_FLAG, DEBUG_FLAG
 from async_jaeger.thrift import TagType
+from async_jaeger.span_context import SpanContext
 
 
 default_logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class Span(opentracing.Span):
             self.operation_name = operation_name
         return self
 
-    async def finish(self, finish_time: Optional[float] = None):
+    def finish(self, finish_time: Optional[float] = None):
         """Indicate that the work represented by this span has been completed
         or terminated, and is ready to be sent to the Reporter.
 
@@ -228,27 +229,3 @@ class Span(opentracing.Span):
         else:
             self.log(event=message)
         return self
-
-    async def __aenter__(self):
-        """Invoked when :class:`Span` is used as a context manager.
-
-        :rtype: Span
-        :return: the :class:`Span` itself
-        """
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Ends context manager and calls finish() on the :class:`Span`.
-
-        If exception has occurred during execution, it is automatically logged
-        and added as a tag. :attr:`~operation.ext.tags.ERROR` will also be set
-        to `True`.
-        """
-        Span._on_error(self, exc_type, exc_val, exc_tb)
-        await self.finish()
-
-    def __enter__(self):
-        raise NotImplementedError
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        raise NotImplementedError
