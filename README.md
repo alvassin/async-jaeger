@@ -21,11 +21,8 @@ from async_jaeger import Tracer
 
 
 async def main():
-    log_level = logging.DEBUG
-    logging.getLogger('').handlers = []
-    logging.basicConfig(format='%(asctime)s %(message)s', level=log_level)
+    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
 
-    # this call also sets opentracing.tracer
     tracer = Tracer(
         service_name='your-app-name',
         reporter=HttpReporter('http://localhost:14268/api/traces')
