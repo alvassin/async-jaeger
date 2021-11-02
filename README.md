@@ -7,12 +7,6 @@ for distributed trace collection, and to send those traces to Jaeger.
 See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python)
 for additional detail.
 
-## Contributing and Developing
-
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-## Installation
-
 ```bash
 pip install async-jaeger
 ```
