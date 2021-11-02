@@ -17,7 +17,7 @@ Jaeger (tcp) client for AsyncIO
    :target: https://pypi.python.org/pypi/async-jaeger/
 
 .. image:: https://img.shields.io/pypi/pyversions/async-jaeger.svg
-   :target: https://pypi.python.org/pypi/aiomisc/
+   :target: https://pypi.python.org/pypi/async-jaeger/
 
 .. image:: https://img.shields.io/pypi/l/async-jaeger.svg
    :target: https://pypi.python.org/pypi/async-jaeger/
