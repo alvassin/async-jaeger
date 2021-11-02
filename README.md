@@ -2,8 +2,9 @@
 
 # Jaeger bindings for Python AsyncIO
 
-This is a client-side library that can be used to instrument Python apps
-for distributed trace collection, and to send those traces to Jaeger.
+Client-side library that can be used for distributed trace collection from 
+Python apps via TCP (HTTP) to Jaeger.
+
 See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python)
 for additional detail.
 
