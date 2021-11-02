@@ -1,6 +1,6 @@
 [![Build Status][ci-img]][ci] [![Coverage Status][cov-img]][cov] [![PyPI Version][pypi-img]][pypi] [![Python Version][pythonversion-img]][pythonversion] [![FOSSA Status][fossa-img]][fossa]
 
-# Jaeger Bindings for Python OpenTracing API
+# Jaeger bindings for Python AsyncIO
 
 This is a client-side library that can be used to instrument Python apps
 for distributed trace collection, and to send those traces to Jaeger.
@@ -22,7 +22,6 @@ pip install async-jaeger
 ```python
 import asyncio
 import logging
-import time
 from async_jaeger.reporter import HttpReporter
 from async_jaeger import Tracer
 
@@ -83,16 +82,6 @@ span.set_tag('jaeger-debug-id', 'some-correlation-id')
 ```
 
 This allows using Jaeger UI to find the trace by this tag.
-
-## Zipkin Compatibility
-
-To use this library directly with other Zipkin libraries & backend,
-you can provide the configuration property `propagation: 'b3'` and the
-`X-B3-*` HTTP headers will be supported.
-
-The B3 codec assumes it will receive lowercase HTTP headers, as this seems
-to be the standard in the popular frameworks like Flask and Django.
-Please make sure your framework does the same.
 
 ## License
 
