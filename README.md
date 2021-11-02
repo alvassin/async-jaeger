@@ -78,13 +78,13 @@ This allows using Jaeger UI to find the trace by this tag.
 
 [Apache 2.0 License](./LICENSE).
 
-[ci-img]: https://github.com/jaegertracing/jaeger-client-python/workflows/Unit%20Tests/badge.svg?branch=master
-[ci]: https://github.com/jaegertracing/jaeger-client-python/actions?query=branch%3Amaster
-[cov-img]: https://codecov.io/gh/jaegertracing/jaeger-client-python/branch/master/graph/badge.svg
-[cov]: https://codecov.io/gh/jaegertracing/jaeger-client-python
-[pypi-img]: https://badge.fury.io/py/jaeger-client.svg
-[pypi]: https://badge.fury.io/py/jaeger-client
-[pythonversion-img]: https://img.shields.io/pypi/pyversions/jaeger-client.svg
-[pythonversion]: https://pypi.org/project/jaeger-client
-[fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-client-python.svg?type=shield
-[fossa]: https://app.fossa.io/projects/git%2Bgithub.com%2Fjaegertracing%2Fjaeger-client-python?ref=badge_shield
+[ci-img]: https://github.com/alvassin/async-jaeger/workflows/Unit%20Tests/badge.svg?branch=master
+[ci]: https://github.com/alvassin/async-jaeger/actions?query=branch%3Amaster
+[cov-img]: https://codecov.io/gh/alvassin/async-jaeger/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/alvassin/async-jaeger
+[pypi-img]: https://badge.fury.io/py/async-jaeger.svg
+[pypi]: https://badge.fury.io/py/async-jaeger
+[pythonversion-img]: https://img.shields.io/pypi/pyversions/async-jaeger.svg
+[pythonversion]: https://pypi.org/project/async-jaeger
+[fossa-img]: https://app.fossa.io/api/projects/git%2Bgithub.com%2Falvassin%2Fasync-jaeger.svg?type=shield
+[fossa]: https://app.fossa.io/projects/git%2Bgithub.com%2Falvassin%2Fasync-jaeger?ref=badge_shield
