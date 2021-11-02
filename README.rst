@@ -5,7 +5,7 @@ Jaeger (tcp) client for AsyncIO
    :target: https://github.com/alvassin/async-jaeger/actions?query=branch%3Amaster
    :alt: Unit tests
 
-.. image:: https://coveralls.io/repos/github/mosquito/aiomisc/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/github/alvassin/async-jaeger/badge.svg?branch=master
    :target: https://coveralls.io/github/alvassin/async-jaeger
    :alt: Coverage
 
