@@ -26,8 +26,7 @@ Jaeger (tcp) client for AsyncIO
 Client-side library that can be used for distributed trace collection from
 Python apps via TCP (HTTP) to Jaeger.
 
-See the [OpenTracing Python API](https://github.com/opentracing/opentracing-python)
-for additional detail.
+See the `OpenTracing Python API`_ for additional detail.
 
 Installation
 ------------
@@ -79,3 +78,4 @@ License
 `Apache 2.0 License`_.
 
 .. _Apache 2.0 License: ./LICENSE
+.. _OpenTracing Python API: https://github.com/opentracing/opentracing-python
