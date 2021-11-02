@@ -18,6 +18,7 @@ setup(
     version=version,
     url='https://github.com/alvassin/async-jaeger',
     description='Jaeger Python OpenTracing Tracer implementation for AsyncIO',
+    long_description=open("README.rst").read(),
     author='Alexander Vasin',
     author_email='hi@alvass.in',
     packages=find_packages(exclude=['crossdock', 'tests', 'example', 'tests.*']),

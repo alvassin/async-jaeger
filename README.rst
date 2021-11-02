@@ -77,5 +77,5 @@ License
 -------
 `Apache 2.0 License`_.
 
-.. _Apache 2.0 License: ./LICENSE
+.. _Apache 2.0 License: https://github.com/alvassin/async-jaeger/blob/master/LICENSE
 .. _OpenTracing Python API: https://github.com/opentracing/opentracing-python
