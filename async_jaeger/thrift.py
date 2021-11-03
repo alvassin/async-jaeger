@@ -79,13 +79,12 @@ def make_tag(
                 if len(value) > max_traceback_length else value
             )
         )
-    elif isinstance(value, str):
+    else:
+        value = str(value)
         kwargs.update(
             vType=SPEC.TagType.STRING,
             vStr=value[:max_length] if len(value) > max_length else value
         )
-    else:
-        raise TypeError('Unsupported tag type')
 
     return SPEC.Tag(**kwargs)
 
