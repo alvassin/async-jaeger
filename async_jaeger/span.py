@@ -27,7 +27,6 @@ class Span(opentracing.Span):
         'logs',
         'tags',
         'finished',
-        'update_lock'
     )
 
     def __init__(
@@ -44,7 +43,6 @@ class Span(opentracing.Span):
         self.start_time = start_time or time.time()
         self.end_time: Optional[float] = None
         self.finished = False
-        self.update_lock = asyncio.Lock()
         self.references = references
 
         # Store tags and logs as thrift objects to avoid extra allocations
@@ -63,9 +61,7 @@ class Span(opentracing.Span):
         :return: Returns the Span itself, for call chaining.
         """
 
-        # TODO: нужен ли тут лок?
-        with self.update_lock:
-            self.operation_name = operation_name
+        self.operation_name = operation_name
         return self
 
     def finish(self, finish_time: Optional[float] = None):
@@ -114,10 +110,6 @@ class Span(opentracing.Span):
         return self
 
     def _set_sampling_priority(self, value):
-        """
-        N.B. Caller must be holding update_lock.
-        """
-
         # Ignore debug spans trying to re-enable debug.
         if self.is_debug() and value:
             return False
@@ -148,15 +140,13 @@ class Span(opentracing.Span):
                 max_length=self._tracer.max_tag_value_length,
                 max_traceback_length=self._tracer.max_traceback_length,
             )
-            with self.update_lock:
-                self.logs.append(log)
+            self.logs.append(log)
         return self
 
     def set_baggage_item(self, key: str, value: Optional[str]) -> 'Span':
         prev_value = self.get_baggage_item(key=key)
         new_context = self.context.with_baggage_item(key=key, value=value)
-        with self.update_lock:
-            self._context = new_context
+        self._context = new_context
         if self.is_sampled():
             logs = {
                 'event': 'baggage',
