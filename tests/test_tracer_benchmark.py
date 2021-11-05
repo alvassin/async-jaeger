@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import time
+
+import pytest
 from opentracing import Tracer as NoopTracer
 from async_jaeger.tracer import Tracer
 from async_jaeger.reporter import NullReporter
@@ -29,11 +31,13 @@ def _generate_spans(tracer, iterations=1000, sleep=None):
                 pass
 
 
+@pytest.mark.skip()
 def test_noop_tracer(benchmark):
     tracer = NoopTracer()
     benchmark(_generate_spans, tracer)
 
 
+@pytest.mark.skip()
 def test_no_sampling(benchmark):
     tracer = Tracer.default_tracer(
         channel=None, service_name='benchmark',
@@ -41,6 +45,7 @@ def test_no_sampling(benchmark):
     benchmark(_generate_spans, tracer)
 
 
+@pytest.mark.skip()
 def test_100pct_sampling(benchmark):
     tracer = Tracer.default_tracer(
         channel=None, service_name='benchmark',
@@ -48,6 +53,7 @@ def test_100pct_sampling(benchmark):
     benchmark(_generate_spans, tracer)
 
 
+@pytest.mark.skip()
 def test_100pct_sampling_250mcs(benchmark):
     tracer = Tracer.default_tracer(
         channel=None, service_name='benchmark',
@@ -56,6 +62,7 @@ def test_100pct_sampling_250mcs(benchmark):
     benchmark(_generate_spans, tracer, sleep=0.00025)
 
 
+@pytest.mark.skip()
 def test_all_batched_size10(benchmark):
     from tchannel.sync import TChannel
     ch = TChannel(name='foo')
@@ -68,6 +75,7 @@ def test_all_batched_size10(benchmark):
     benchmark(_generate_spans, tracer, sleep=0.00025)
 
 
+@pytest.mark.skip()
 def test_all_batched_size5(benchmark):
     from tchannel.sync import TChannel
     ch = TChannel(name='foo')
@@ -80,6 +88,7 @@ def test_all_batched_size5(benchmark):
     benchmark(_generate_spans, tracer, sleep=0.00025)
 
 
+@pytest.mark.skip()
 def test_all_not_batched(benchmark):
     from tchannel.sync import TChannel
     ch = TChannel(name='foo')

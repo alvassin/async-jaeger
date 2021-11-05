@@ -40,14 +40,6 @@ def get_tags(type, param):
     }
 
 
-def test_abstract_sampler_errors():
-    sampler = BaseSampler()
-    with pytest.raises(NotImplementedError):
-        sampler.is_sampled(trace_id=123)
-    with pytest.raises(NotImplementedError):
-        sampler.close()
-
-
 def test_probabilistic_sampler_errors():
     with pytest.raises(AssertionError):
         ProbabilisticSampler(-0.1)

@@ -39,10 +39,3 @@ def test_with_baggage_items():
     baggage1.pop('a')
     assert ctx3.baggage == baggage1
 
-
-def test_is_debug_id_container_only():
-    ctx = SpanContext.with_debug_id('value1')
-    assert ctx.is_debug_id_container_only
-    assert ctx.debug_id == 'value1'
-    ctx = SpanContext(trace_id=1, span_id=2, parent_id=3, flags=1)
-    assert not ctx.is_debug_id_container_only

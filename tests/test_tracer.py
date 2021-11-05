@@ -338,9 +338,6 @@ def test_tracer_throttler():
     assert tracer.is_debug_allowed()
     tracer.throttler.is_allowed.return_value = False
     assert not tracer.is_debug_allowed()
-    debug_span_context = SpanContext.with_debug_id('debug-id')
-    span = tracer.start_span('test-operation', child_of=debug_span_context)
-    assert not span.is_debug()
 
 
 def test_tracer_128bit_trace_id():
