@@ -13,6 +13,13 @@ PY_PATH = $(PYTHONPATH):$(PWD)
 
 .DEFAULT_GOAL := test
 
+.PHONY: devenv
+devenv:
+	rm -rf env/
+	python3.9 -m venv env/
+	env/bin/pip install -U pip
+	env/bin/pip install -e '.[tests]'
+
 
 .PHONY: bootstrap
 bootstrap:
@@ -30,15 +37,7 @@ test: clean
 	$(pytest) $(test_args) --benchmark-skip
 
 .PHONY: test_ci
-test_ci: clean test-import test lint
-
-.PHONY: test-import
-test-import:
-	virtualenv import-test
-	import-test/bin/pip install -e .
-	pip install "tornado$(TORNADO)"  # Reinstall Tornado version for testing.
-	import-test/bin/python -c "import async_jaeger"
-	rm -rf import-test
+test_ci: clean test lint
 
 .PHONY: test-perf
 test-perf: clean
