@@ -269,9 +269,6 @@ class Tracer(opentracing.Tracer):
         """
         Perform a clean shutdown of the tracer, flushing any traces that
         may be buffered in memory.
-
-        :return: Returns a tornado.concurrent.Future that indicates if the
-            flush has been completed.
         """
         await self.sampler.close()
         return await self.reporter.close()
