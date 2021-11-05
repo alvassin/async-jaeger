@@ -10,4 +10,3 @@ def tracer():
     return Tracer(
         service_name='test_service_1', reporter=reporter, sampler=sampler
     )
-
