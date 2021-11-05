@@ -66,8 +66,7 @@ clean:
 .PHONY: lint
 lint:
 	$(flake8) $(projects) tests
-	mypy $(project)
-	./scripts/check-license.sh
+	# mypy $(project)
 
 .PHONY: shell
 shell:
