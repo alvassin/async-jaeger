@@ -99,13 +99,15 @@ class ReporterTest(AsyncTestCase):
 
     @staticmethod
     def _new_reporter(batch_size, flush=None, queue_cap=100):
-        reporter = HttpReporter(channel=mock.MagicMock(),
-                            io_loop=IOLoop.current(),
-                            batch_size=batch_size,
-                            flush_interval=flush,
-                            metrics_factory=FakeMetricsFactory(),
-                            error_reporter=HardErrorReporter(),
-                            queue_capacity=queue_cap)
+        reporter = HttpReporter(
+            channel=mock.MagicMock(),
+            io_loop=IOLoop.current(),
+            batch_size=batch_size,
+            flush_interval=flush,
+            metrics_factory=FakeMetricsFactory(),
+            error_reporter=HardErrorReporter(),
+            queue_capacity=queue_cap
+        )
         reporter.set_process('service', {}, max_length=0)
         sender = FakeSender()
         reporter._send = sender
@@ -224,7 +226,9 @@ class ReporterTest(AsyncTestCase):
 
         def send(_):
             count[0] += 1
-            return future_result(True)
+            f = Future()
+            f.set_result(True)
+            return f
 
         reporter._send = send
         reporter.batch_size = 3

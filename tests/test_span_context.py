@@ -23,4 +23,3 @@ def test_with_baggage_items():
     assert ctx2.baggage != ctx3.baggage
     baggage1.pop('a')
     assert ctx3.baggage == baggage1
-

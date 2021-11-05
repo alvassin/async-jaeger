@@ -57,8 +57,8 @@ class BaseSampler(ABC):
 
     def __eq__(self, other: Any) -> bool:
         return (
-            isinstance(other, self.__class__) and
-            self.__dict__ == other.__dict__
+            isinstance(other, self.__class__)
+            and self.__dict__ == other.__dict__
         )
 
     def __ne__(self, other: Any) -> bool:
@@ -248,10 +248,10 @@ class AdaptiveSampler(BaseSampler):
 
         self.samplers = samplers
         self.default_sampler = ProbabilisticSampler(
-                strategies.get(
-                    DEFAULT_SAMPLING_PROBABILITY_STR,
-                    DEFAULT_SAMPLING_PROBABILITY
-                )
+            strategies.get(
+                DEFAULT_SAMPLING_PROBABILITY_STR,
+                DEFAULT_SAMPLING_PROBABILITY
+            )
         )
         self.default_sampling_probability = strategies.get(
             DEFAULT_SAMPLING_PROBABILITY_STR, DEFAULT_SAMPLING_PROBABILITY
