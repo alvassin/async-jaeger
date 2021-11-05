@@ -13,6 +13,13 @@ with open('async_jaeger/version.py', 'r') as f:
 assert version is not None, \
     'Could not determine version number from async_jaeger/__init__.py'
 
+def load_requirements(fname):
+    """ load requirements from a pip requirements file """
+    with open(fname) as f:
+        line_iter = (line.strip() for line in f.readlines())
+        return [line for line in line_iter if line and line[0] != '#']
+
+
 setup(
     name='async-jaeger',
     version=version,
@@ -21,7 +28,7 @@ setup(
     long_description=open("README.rst").read(),
     author='Alexander Vasin',
     author_email='hi@alvass.in',
-    packages=find_packages(exclude=['crossdock', 'tests', 'example', 'tests.*']),
+    packages=find_packages(exclude=['tests', 'example', 'tests.*']),
     include_package_data=True,
     license='Apache License 2.0',
     zip_safe=False,
@@ -36,37 +43,13 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     python_requires='>=3.7',
-    install_requires=[
-        'aiohttp',
-        'thriftpy2',
-        'opentracing>=2.1,<3.0',
-    ],
+    install_requires=load_requirements('requirements.txt'),
     # Uncomment below if need to test with unreleased version of opentracing
     # dependency_links=[
     #     'git+ssh://git@github.com/opentracing/opentracing-python.git@BRANCHNAME#egg=opentracing',
     # ],
     test_suite='tests',
     extras_require={
-        "dev": [
-            "aiomisc",
-        ],
-        'tests': [
-            'mock',
-            'pycurl',
-            'pytest',
-            'pytest-cov',
-            'coverage',
-            'pytest-timeout',
-            'pytest-benchmark[histogram]',
-            'pytest-localserver',
-            'flake8',
-            'flake8-quotes',
-            'flake8-typing-imports',
-            'codecov',
-            'tchannel==2.1.0',
-            'opentracing_instrumentation>=3,<4',
-            'prometheus_client==0.11.0',
-            'mypy',
-        ]
+        'tests': load_requirements('requirements.tests.txt')
     },
 )

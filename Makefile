@@ -21,8 +21,7 @@ bootstrap:
 	pip install -U 'pip>=9.0'
 	pip install 'setuptools>=20.8.1'
 	pip install -r requirements.txt
-	pip install -r requirements-dev.txt
-	pip install -r requirements-tests.txt
+	pip install -r requirements.tests.txt
 	pip install virtualenv
 	python setup.py develop
 
