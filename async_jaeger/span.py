@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import time
 from typing import Any, Dict, Optional, List, Mapping
@@ -93,8 +92,8 @@ class Span(opentracing.Span):
         :param value:
         """
         if (
-                key == ext_tags.SAMPLING_PRIORITY and
-                not self._set_sampling_priority(value)
+                key == ext_tags.SAMPLING_PRIORITY
+                and not self._set_sampling_priority(value)
         ):
             return self
 

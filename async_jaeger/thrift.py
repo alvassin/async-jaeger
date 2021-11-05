@@ -1,4 +1,3 @@
-import os
 import pkg_resources
 import time
 import traceback
@@ -113,9 +112,15 @@ def make_span_ref(reference: Reference) -> SPEC.SpanRef:
 
     return SPEC.SpanRef(
         refType=ref_type,
-        traceIdLow=convert_unsigned_int_to_signed(get_right_64_bits(reference.referenced_context.trace_id)),
-        traceIdHigh=convert_unsigned_int_to_signed(get_left_64_bits(reference.referenced_context.trace_id)),
-        spanId=convert_unsigned_int_to_signed(reference.referenced_context.span_id),
+        traceIdLow=convert_unsigned_int_to_signed(
+            get_right_64_bits(reference.referenced_context.trace_id)
+        ),
+        traceIdHigh=convert_unsigned_int_to_signed(
+            get_left_64_bits(reference.referenced_context.trace_id)
+        ),
+        spanId=convert_unsigned_int_to_signed(
+            reference.referenced_context.span_id
+        ),
     )
 
 
@@ -136,10 +141,17 @@ def make_log(
 
 def make_span(span) -> SPEC.Span:
     return SPEC.Span(
-        traceIdLow=convert_unsigned_int_to_signed(get_right_64_bits(span.trace_id)),
-        traceIdHigh=convert_unsigned_int_to_signed(get_left_64_bits(span.trace_id)),
+        traceIdLow=convert_unsigned_int_to_signed(
+            get_right_64_bits(span.trace_id)
+        ),
+        traceIdHigh=convert_unsigned_int_to_signed(
+            get_left_64_bits(span.trace_id)
+        ),
         spanId=convert_unsigned_int_to_signed(span.span_id),
-        parentSpanId=convert_unsigned_int_to_signed(span.parent_id) if span.parent_id else 0,
+        parentSpanId=(
+            convert_unsigned_int_to_signed(span.parent_id)
+            if span.parent_id else 0
+        ),
         operationName=span.operation_name,
         references=(
             [make_span_ref(ref) for ref in span.references]
@@ -158,4 +170,3 @@ def make_batch(spans, process):
         spans=[make_span(span) for span in spans],
         process=process,
     )
-

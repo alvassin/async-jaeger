@@ -7,11 +7,11 @@ from .tracer import Tracer
 from .version import __version__
 
 __all__ = (
-    "ConstSampler",
-    "ProbabilisticSampler",
-    "RateLimitingSampler",
-    "Span",
-    "SpanContext",
-    "Tracer",
-    "__version__"
+    'ConstSampler',
+    'ProbabilisticSampler',
+    'RateLimitingSampler',
+    'Span',
+    'SpanContext',
+    'Tracer',
+    '__version__'
 )
