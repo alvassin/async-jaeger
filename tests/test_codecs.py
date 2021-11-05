@@ -1,12 +1,11 @@
 import unittest
-from collections import namedtuple
 from itertools import product
 
 import mock
 import pytest
 from async_jaeger import Span, SpanContext, Tracer, ConstSampler
 from async_jaeger.codecs import (
-    BaseCodec, TextCodec, BinaryCodec,
+    TextCodec, BinaryCodec,
     span_context_from_string,
     span_context_to_string,
 )
@@ -202,7 +201,6 @@ class TestCodecs(unittest.TestCase):
         assert context.parent_id == 0xFFFFFFFFFFFFFFFF
         assert context.parent_id == (1 << 64) - 1
         assert context.parent_id > 0
-
 
     def test_binary_codec(self):
         codec = BinaryCodec()
