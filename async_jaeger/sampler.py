@@ -9,7 +9,6 @@ from .constants import (
     SAMPLER_TYPE_LOWER_BOUND,
 )
 from .metrics import MetricsFactory
-from .thrift import TagType
 from .rate_limiter import RateLimiter
 from typing import Any, Dict, Optional, Tuple
 
@@ -36,7 +35,7 @@ STRATEGY_TYPE_STR = 'strategyType'
 PROBABILISTIC_SAMPLING_STRATEGY = 'PROBABILISTIC'
 RATE_LIMITING_SAMPLING_STRATEGY = 'RATE_LIMITING'
 
-TagsType = Dict[str, TagType]
+TagsType = Dict[str, Any]
 IsSampledType = Tuple[bool, TagsType]
 
 

@@ -2,7 +2,7 @@ import pkg_resources
 import time
 import traceback
 from types import TracebackType
-from typing import Union, Mapping, Any, Optional, Tuple
+from typing import Mapping, Any, Optional, Tuple, Dict
 
 import thriftpy2
 from opentracing import Reference, ReferenceType
@@ -16,8 +16,6 @@ SPEC = thriftpy2.load(SPEC_PATH, 'jaeger_thrift')
 
 MAX_SIGNED_ID = (1 << 63) - 1
 MAX_UNSIGNED_ID = (1 << 64)
-
-TagType = Union[bool, int, float, str, bytes]
 
 
 def timestamp_to_microseconds(value: float) -> int:
@@ -55,11 +53,11 @@ def convert_unsigned_int_to_signed(value: int) -> int:
 
 def make_tag(
         key: str,
-        value: TagType,
+        value: Any,
         max_length: int = MAX_TAG_VALUE_LENGTH,
         max_traceback_length: int = MAX_TRACEBACK_LENGTH
-) -> SPEC.Tag:
-    kwargs = {'key': key}
+) -> SPEC.Tag:  # noqa
+    kwargs: Dict[str, Any] = {'key': key}
 
     if isinstance(value, bool):
         kwargs.update(vType=SPEC.TagType.BOOL, vBool=value)
@@ -90,9 +88,9 @@ def make_tag(
 
 def make_process(
         service_name: str,
-        tags: Mapping[str, TagType],
+        tags: Mapping[str, Any],
         max_length: int = MAX_TAG_VALUE_LENGTH
-) -> SPEC.Process:
+) -> SPEC.Process:  # noqa
     return SPEC.Process(
         serviceName=service_name,
         tags=[

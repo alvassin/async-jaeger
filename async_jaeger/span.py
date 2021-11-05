@@ -9,7 +9,6 @@ from opentracing.ext import tags as ext_tags
 
 from async_jaeger import codecs, thrift
 from async_jaeger.constants import SAMPLED_FLAG, DEBUG_FLAG
-from async_jaeger.thrift import TagType
 from async_jaeger.span_context import SpanContext
 
 
@@ -33,7 +32,7 @@ class Span(opentracing.Span):
         tracer: Tracer,
         context: SpanContext,
         operation_name: str,
-        tags: Optional[Mapping[str, TagType]] = None,
+        tags: Optional[Mapping[str, Any]] = None,
         start_time: Optional[float] = None,
         references: Optional[List[opentracing.Reference]] = None
     ) -> None:

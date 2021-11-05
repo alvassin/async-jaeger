@@ -6,13 +6,12 @@ from typing import Any, Optional, Mapping, List
 
 import aiohttp
 from aiohttp import ClientSession, hdrs
-from thriftpy2.utils import serialize
+from thriftpy2.utils import serialize  # noqa
 
 from async_jaeger import thrift
 from async_jaeger.constants import DEFAULT_FLUSH_INTERVAL, MAX_TAG_VALUE_LENGTH
 from async_jaeger.metrics import MetricsFactory, Metrics, LegacyMetricsFactory
 from async_jaeger.span import Span
-from async_jaeger.thrift import TagType
 from async_jaeger.utils import ErrorReporter
 
 
@@ -24,7 +23,7 @@ class BaseReporter(ABC):
     def set_process(
             self,
             service_name: str,
-            tags: Mapping[str, TagType],
+            tags: Mapping[str, Any],
             max_length: int = MAX_TAG_VALUE_LENGTH
     ):
         pass
@@ -80,7 +79,7 @@ class HttpReporter(NullReporter):
     ):
         self.url = url
         self.logger = kwargs.get('logger', default_logger)
-        self.queue = asyncio.Queue(maxsize=queue_capacity)
+        self.queue: asyncio.Queue = asyncio.Queue(maxsize=queue_capacity)
         self.batch_size = batch_size
         self.flush_interval = flush_interval or None
         self.stop = object()
@@ -104,7 +103,7 @@ class HttpReporter(NullReporter):
     def set_process(
             self,
             service_name: str,
-            tags: Mapping[str, TagType],
+            tags: Mapping[str, Any],
             max_length: int = MAX_TAG_VALUE_LENGTH
     ):
         self._process = thrift.make_process(
@@ -207,7 +206,7 @@ class CompositeReporter(BaseReporter):
     def set_process(
             self,
             service_name: str,
-            tags: Mapping[str, TagType],
+            tags: Mapping[str, Any],
             max_length: int = MAX_TAG_VALUE_LENGTH
     ):
         for reporter in self.reporters:
