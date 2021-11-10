@@ -6,12 +6,12 @@ import random
 import sys
 import time
 import opentracing
-from typing import Any, Dict, Optional, List, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from opentracing import Format, UnsupportedFormatException
 from opentracing.ext import tags as ext_tags
 from opentracing.scope_managers import ThreadLocalScopeManager, ScopeManager
-from opentracing.tracer import Reference
+from opentracing.tracer import Reference, Tracer
 
 from . import constants
 from .codecs import TextCodec, BinaryCodec, BaseCodec
@@ -111,6 +111,18 @@ class Tracer(opentracing.Tracer):
             scope_manager=scope_manager or ThreadLocalScopeManager()
         )
 
+    @staticmethod
+    def create_span(tracer: Tracer,
+                    context: SpanContext,
+                    operation_name: str,
+                    tags: Optional[Mapping[str, Any]],
+                    start_time: Optional[float],
+                    references: Optional[List[opentracing.Reference]]
+                    ) -> Span:
+        return Span(tracer=tracer, context=context,
+                    operation_name=operation_name, tags=tags,
+                    start_time=start_time, references=references)
+
     def start_span(self,
                    operation_name: Optional[str] = None,
                    child_of: Union[None, Span, SpanContext] = None,
@@ -199,10 +211,10 @@ class Tracer(opentracing.Tracer):
         span_ctx = SpanContext(trace_id=trace_id, span_id=span_id,
                                parent_id=parent_id, flags=flags,
                                baggage=baggage)
-        span = Span(context=span_ctx, tracer=self,
-                    operation_name=operation_name or '',
-                    tags=tags, start_time=start_time, references=valid_references)
-
+        span = self.create_span(tracer=self, context=span_ctx,
+                                operation_name=operation_name or '',
+                                tags=tags, start_time=start_time,
+                                references=valid_references)
         self._emit_span_metrics(span=span, join=rpc_server)
 
         return span
